@@ -135,6 +135,19 @@ Point highestLine(Mat& m) {
   return highest;
 }
 
+int whitePercent(Mat &m) {
+  int black = 0;
+  int white = 0;
+  for (auto it = m.begin<uchar>(); it != m.end<uchar>(); it++) {
+    if (*it == 0) {
+      black++;
+    } else {
+      white++;
+    }
+  }
+  return white*100/(black+white);
+}
+
 int main(int argc, char **argv)
 {
   pqxx::connection c("dbname=mlimages user=jason");
@@ -175,6 +188,8 @@ int main(int argc, char **argv)
     Mat both;
     std::vector<Mat> lifted = {orig_img, disp_img};
     hconcat(lifted, both);
+
+    cout << "White %: " << whitePercent(proc_img) << endl;
 
     cv::namedWindow("Display Image", cv::WINDOW_AUTOSIZE );
     cv::imshow("Display Image", both);
