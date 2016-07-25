@@ -77,8 +77,8 @@ Point firstBlackLeft(Mat& m) {
     // Check if the current pixel is black, if so
     // return it.
     auto point = edgeToIndexL(i, width-1, height-1);
-    Vec3b color = m.at<Vec3b>(point);
-    if (color.val[0] == 0) {
+    uchar color = m.at<uchar>(point);
+    if (color == 0) {
       return point;
     }
   }
@@ -90,7 +90,7 @@ Point edgeToIndexR(int idx, int width, int height) {
   if (idx > width/2 + height) {
     return Point(idx - height + width/2, 0);
   } else if (idx > width/2) {
-    return Point(width, height- (idx - width/2));
+    return Point(width, height - (idx - width/2));
   } else {
     return Point(width/2 + idx, height);
   }
@@ -109,15 +109,15 @@ Point firstBlackRight(Mat& m) {
     // Check if the current pixel is black, if so
     // return it.
     auto point = edgeToIndexR(i, width-1, height-1);
-    Vec3b color = m.at<Vec3b>(point);
-    if (color.val[0] == 0) {
+    uchar color = m.at<uchar>(point);
+    if (color == 0) {
       return point;
     }
   }
   return Point(width/2, 0);
 }
 
-// Highest line returns the height of the highest continous 
+// Highest line returns the height of the highest continous
 // white column
 Point highestLine(Mat& m) {
   Point highest = Point(0, m.rows);
@@ -126,7 +126,6 @@ Point highestLine(Mat& m) {
     for (int y = m.rows-1; y >= 0; y--) {
       uchar color = m.at<uchar>(Point(x, y));
       if (color == 255) {
-        //cout << "Checking " << x << ", " << y << endl;
         if (y < highest.y) {
           highest = Point(x, y);
         }
@@ -156,75 +155,73 @@ int main(int argc, char **argv)
   pqxx::connection c("dbname=mlimages user=jason");
   pqxx::work txn(c);
 
-  pqxx::result res = txn.exec("SELECT count(*) FROM images");
-  int numImages = res[0][0].as<int>();
-
+  int numImages = txn.exec("SELECT count(*) FROM images")[0][0].as<int>(0);
   Mat training_inputs = Mat(numImages, 7, CV_32F);
   Mat training_outputs = Mat(numImages, 6, CV_32F);
   cout << "Reading data..." << endl;
-  for (int i = 1; i <= numImages; ++i)
+  Ptr<ml::ANN_MLP> brain;
+  // check if the data already exists
+  ifstream f("ml.out");
+  if (f.good())
   {
-    std::stringstream ss;
-    ss << "SELECT image, a1, a2, b1, b2, lpwm, rpwm FROM images WHERE id=" << i;
-    pqxx::result res = txn.exec(ss.str());
-
+    brain = Algorithm::load<ANN_MLP>("ml.out");
+  }
+  else
+  {
+    pqxx::result res = txn.exec("SELECT image, a1, a2, b1, b2, lpwm, rpwm FROM images");
     Mat img;
-    strToMat(res[0][0].as<std::string>(), img);
-    cvtColor(img, img, CV_BGR2GRAY);
-    threshold(img, img, 128, 255, 0);
+    for (int i = 0; i < numImages; ++i)
+    {
+      strToMat(res[i][0].as<std::string>(), img);
+      cvtColor(img, img, CV_BGR2GRAY);
+      threshold(img, img, 128, 255, 0);
 
-    Point pix = firstBlackLeft(img);
-    Point pix2 = firstBlackRight(img);
-    Point highest = highestLine(img);
-    int wperc = whitePercent(img);
+      Point pix = firstBlackLeft(img);
+      Point pix2 = firstBlackRight(img);
+      Point highest = highestLine(img);
+      int wperc = whitePercent(img);
 
-    int* ptr = training_inputs.ptr<int>(i);
-    ptr[0] = pix.x;
-    ptr[1] = pix.y;
-    ptr[2] = pix2.x;
-    ptr[3] = pix2.y;
-    ptr[4] = highest.x;
-    ptr[5] = highest.y;
-    ptr[6] = wperc;
+      int* ptr = training_inputs.ptr<int>(i);
+      ptr[0] = pix.x;
+      ptr[1] = pix.y;
+      ptr[2] = pix2.x;
+      ptr[3] = pix2.y;
+      ptr[4] = highest.x;
+      ptr[5] = highest.y;
+      ptr[6] = wperc;
 
-    ptr = training_outputs.ptr<int>(i);
-    ptr[0] = res[0][1].as<int>();
-    ptr[1] = res[0][2].as<int>();
-    ptr[2] = res[0][3].as<int>();
-    ptr[3] = res[0][4].as<int>();
-    ptr[4] = res[0][5].as<int>();
-    ptr[5] = res[0][6].as<int>();
+      ptr = training_outputs.ptr<int>(i);
+      for (int j = 0; j < 6; ++j) {
+        ptr[j] = res[i][j+1].as<int>();
+      }
+    }
+
+    TermCriteria criteria = TermCriteria(TermCriteria::MAX_ITER + TermCriteria::EPS, 1000, 0.0001f);
+
+    brain = ANN_MLP::create();
+    Mat layers = (Mat_<int>(1,3) << 7, 6, 6);
+
+    brain->setLayerSizes(layers);
+    brain->setTermCriteria(criteria);
+
+    Ptr<TrainData> data = TrainData::create(training_inputs, SampleTypes::ROW_SAMPLE, training_outputs);
+    //data->setTrainTestSplitRatio(0.75);
+
+    brain->train(data);
+    //Mat output;
+    //float err = brain->calcError(data, true, output);
+    //cout << "Err: " << err << endl;
+    brain->save("ml.out");
   }
 
-  cout << "Building network..." << endl;
-  TermCriteria criteria = TermCriteria();
-  criteria.maxCount = 100;
-  criteria.epsilon = 0.00001f;
-
-  Ptr<ml::ANN_MLP> brain = ANN_MLP::create();
-  Mat layers = (Mat_<int>(1,3) << 7, 6, 6);
-  
-  brain->setLayerSizes(layers);
-  brain->setTermCriteria(criteria);
-
-  Ptr<TrainData> data = TrainData::create(training_inputs, SampleTypes::ROW_SAMPLE, training_outputs);
-  data->setTrainTestSplitRatio(0.75);
-
-  cout << "Training..." << endl;
-  brain->train(data);
-  cout << "Verifying..." << endl;
-  Mat output;
-  float err = brain->calcError(data, true, output);
-  cout << "Err: " << err << endl;
-
-  for (int i = 1; i <= numImages; ++i)
+  for (int i = 0; i < numImages; ++i)
   {
     std::stringstream ss;
-    ss << "SELECT image, a1, a2, b1, b2, lpwm, rpwm FROM images WHERE id=" << i;
+    ss << "SELECT image, a1, a2, b1, b2, lpwm, rpwm FROM images WHERE id=" << i+1;
     pqxx::result res = txn.exec(ss.str());
 
     Mat orig_img, img;
-    strToMat(res[0][0].as<std::string>(), orig_img);
+    strToMat(res[0][0].as<string>(), orig_img);
     cvtColor(orig_img, img, CV_BGR2GRAY);
     threshold(img, img, 128, 255, 0);
 
@@ -234,16 +231,8 @@ int main(int argc, char **argv)
     int wperc = whitePercent(img);
 
     Mat inData = (Mat_<double>(1,7, CV_32F) << pix.x, pix.y, pix2.x, pix2.y, highest.x, highest.y, wperc);
-    cout << "In: ["
-      << pix.x << ", "
-      << pix.y << ", "
-      << pix2.x << ", "
-      << pix2.y << ", "
-      << highest.x << ", "
-      << highest.y << ", "
-      << wperc << "]" << endl;
 
-    cout << "Exp: [" 
+    cout << "Exp: ["
       << res[0][1].as<int>() << ", "
       << res[0][2].as<int>() << ", "
       << res[0][3].as<int>() << ", "
@@ -253,14 +242,14 @@ int main(int argc, char **argv)
 
     Mat out;
     brain->predict(inData, out);
-    float* row = out.ptr<float>(0);
+    double* row = out.ptr<double>(0);
     cout << "Actual: ["
         << row[0] << ", "
         << row[1] << ", "
         << row[2] << ", "
         << row[3] << ", "
         << row[4] << ", "
-        << row[5] << "]" << endl;
+        << row[5] << "]" << endl << endl;;
 
     Mat disp_img;
     cvtColor(img, disp_img, CV_GRAY2BGR);
