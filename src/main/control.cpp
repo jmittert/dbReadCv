@@ -10,6 +10,7 @@
 #include <signal.h>
 #include <netdb.h>
 #include <unistd.h>
+#include <cstdint>
 #include "lib.hpp"
 #include "features.hpp"
 
@@ -26,6 +27,7 @@ void cleanup(int signal)
 {
   freeaddrinfo(servinfo);
   close(s);
+  shutdown(new_fd, 2);
   close(new_fd);
   exit(0);
 }
@@ -97,62 +99,56 @@ int main(int argc, char **argv)
 
     // Close the listening port
     close(s);
-    char* buff = new char[1024];
-    int rec_size = recv(new_fd, buff, 1024, 0);
-    send(new_fd, buff, rec_size, 0);
-    delete[] buff;
-    shutdown(new_fd, 2);
-    close(new_fd);
-  }
 
-  /*
-  // Make some predictions
-  std::stringstream ss;
-	pqxx::result res = txn.exec("SELECT image FROM images");
-			Mat img;
-      strToMat(res[0][0].as<std::string>(), img);
-      cvtColor(img, img, CV_BGR2GRAY);
-      threshold(img, img, 128, 255, 0);
-
-      Point pix = firstBlackLeft(img);
-      Point pix2 = firstBlackRight(img);
-      Point highest = highestLine(img);
-      int wperc = whitePercent(img);
-      inputs.at<float>(i,0) = pix.x;
-      inputs.at<float>(i,1) = pix.y;
-      inputs.at<float>(i,2) = pix2.x;
-      inputs.at<float>(i,3) = pix2.y;
-      inputs.at<float>(i,4) = highest.x;
-      inputs.at<float>(i,5) = highest.y;
-      inputs.at<float>(i,6) = wperc;
-  Mat out;
-  brain->predict(inputs, out); 
-  for (int i = 0; i < numImages; ++i) {
-    cout << "Exp: [" << res[i][1] << ", " << res[i][2] << "]" << endl;
-
-		Mat outData = out.row(i);
-    cout << "Actual: " << outData << endl;
-
-    Mat orig_img, img, disp_img;
-    strToMat(res[i][0].as<string>(), orig_img);
-    cvtColor(orig_img, img, CV_BGR2GRAY);
-    threshold(img, img, 128, 255, 0);
-
-    Point pix = firstBlackLeft(img);
-    Point pix2 = firstBlackRight(img);
-    Point highest = highestLine(img);
-    cvtColor(img, disp_img, CV_GRAY2BGR);
-    circle(disp_img, pix, 10, CV_RGB(0,255,0), 5);
-    circle(disp_img, pix2, 10, CV_RGB(0,255,0), 5);
-    line(disp_img, highest, Point(highest.x, disp_img.rows), CV_RGB(0,255,0), 5);
-
-    Mat both;
-    std::vector<Mat> lifted = {orig_img, disp_img};
-    hconcat(lifted,both);
-
+    int resp = 1;
+    cout << "gotcha!" << endl;
     namedWindow("Image" , cv::WINDOW_AUTOSIZE);
-    cv::imshow("Image", both);
-    cv::waitKey(0);
+    do {
+      pqxx::result res = txn.exec("SELECT image FROM images ORDER BY id DESC LIMIT 1");
+      Mat img;
+      Mat disp_img;
+      strToMat(res[0][0].as<std::string>(), img);
+      cvtColor(img, disp_img, CV_BGR2GRAY);
+      threshold(disp_img, disp_img, 128, 255, 0);
+      Point pix = firstBlackLeft(disp_img);
+      Point pix2 = firstBlackRight(disp_img);
+      Point highest = highestLine(disp_img);
+      int wperc = whitePercent(disp_img);
+      Mat inputs = Mat(1, 7, CV_32F);
+      inputs.at<float>(0,0) = pix.x;
+      inputs.at<float>(0,1) = pix.y;
+      inputs.at<float>(0,2) = pix2.x;
+      inputs.at<float>(0,3) = pix2.y;
+      inputs.at<float>(0,4) = highest.x;
+      inputs.at<float>(0,5) = highest.y;
+      inputs.at<float>(0,6) = wperc;
+
+      Mat out;
+      brain->predict(inputs, out); 
+      uint8_t lpwm = out.at<uint8_t>(0,0);
+      uint8_t rpwm = out.at<uint8_t>(0,1);
+
+      char pack[6];
+      memset(pack, 0, 6);
+      pack[0] = 1;
+      pack[1] = 0;
+      pack[2] = 1;
+      pack[3] = 0;
+      pack[4] = lpwm;
+      pack[5] = rpwm;
+      resp = send(new_fd, pack, 6, 0);
+
+      // Visualizations
+      cvtColor(disp_img, disp_img, CV_GRAY2BGR);
+      circle(disp_img, pix, 10, CV_RGB(0,255,0), 5);
+      circle(disp_img, pix2, 10, CV_RGB(0,255,0), 5);
+      line(disp_img, highest, Point(highest.x, disp_img.rows), CV_RGB(0,255,0), 5);
+      Mat both;
+      std::vector<Mat> lifted = {img, disp_img};
+      hconcat(lifted,both);
+
+      cv::imshow("Image", both);
+      cv::waitKey(20);
+    } while (resp != 0);
   }
-  */
 }
