@@ -14,10 +14,12 @@ if(NOT LIBPQXX_FOUND)
   message(FATAL_ERROR " Please check your libqp installation.") 
 endif(NOT LIBPQXX_FOUND)
 
-add_executable( DBNN src/nnw.cpp)
+add_executable( train src/main/nnw.cpp src/lib/lib.cpp)
+add_executable( control src/main/control.cpp src/lib/lib.cpp)
 
-include_directories(${PostgreSQL_INCLUDE_DIR} ${LIBPQXX_INCLUDE_DIRS})
-target_link_libraries( DBNN ${OpenCV_LIBS} ${PostgreSQL_LIBRARIES} /usr/lib/libpqxx.so)
+include_directories(${PostgreSQL_INCLUDE_DIR} ${LIBPQXX_INCLUDE_DIRS} include)
+target_link_libraries( train ${OpenCV_LIBS} ${PostgreSQL_LIBRARIES} /usr/lib/libpqxx.so)
+target_link_libraries( control ${OpenCV_LIBS} ${PostgreSQL_LIBRARIES} /usr/lib/libpqxx.so)
 LINK_DIRECTORIES(${LIBPQXX_LIBRARY_DIRS})
 
 set (CMAKE_CXX_FLAGS)

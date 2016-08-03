@@ -37,6 +37,7 @@ flags = [
     '-x',
     'c++',
     '-std=c++11',
+    '-Iinclude'
 ]
 
 
