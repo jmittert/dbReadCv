@@ -1,3 +1,5 @@
 build
 .ycm_extra_conf.pyc
 tags
+*.gch
+cscope.out

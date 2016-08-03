@@ -8,108 +8,12 @@
 #include <opencv2/core.hpp>
 #include <fstream>
 #include "lib.hpp"
+#include "features.hpp"
 
 
 using namespace cv;
 using namespace cv::ml;
 using namespace std;
-
-// Returns the row and column index given the edge index
-Point edgeToIndexL(int idx, int width, int height) {
-  if (idx > width/2 + height) {
-    return Point(idx - height - width/2, 0);
-  } else if (idx > width/2) {
-    return Point(0, height- (idx - width/2));
-  } else {
-    return Point(width/2 - idx, height);
-  }
-  std::stringstream ss;
-  ss << idx << "Out of range: " << width + height << std::endl;
-  throw ss.str();
-}
-
-// Finds the first black pixel on the left hand side
-Point firstBlackLeft(Mat& m) {
-  int width = m.cols;
-  int height = m.rows;
-
-  // Perform a linear search to find the first black pixel
-  for (int i = 0; i < width + height; i++) {
-    // Check if the current pixel is black, if so
-    // return it.
-    auto point = edgeToIndexL(i, width-1, height-1);
-    uchar color = m.at<uchar>(point);
-    if (color == 0) {
-      return point;
-    }
-  }
-  return Point(width/2, 0);
-}
-
-// Returns the row and column index given the edge index
-Point edgeToIndexR(int idx, int width, int height) {
-  if (idx > width/2 + height) {
-    return Point(idx - height + width/2, 0);
-  } else if (idx > width/2) {
-    return Point(width, height - (idx - width/2));
-  } else {
-    return Point(width/2 + idx, height);
-  }
-  std::stringstream ss;
-  ss << idx << "Out of range: " << width + height << std::endl;
-  throw ss.str();
-}
-
-// Finds the first black pixel on the right hand side
-Point firstBlackRight(Mat& m) {
-  int width = m.cols;
-  int height = m.rows;
-
-  // Perform a linear search to find the first black pixel
-  for (int i = 0; i < width + height; i++) {
-    // Check if the current pixel is black, if so
-    // return it.
-    auto point = edgeToIndexR(i, width-1, height-1);
-    uchar color = m.at<uchar>(point);
-    if (color == 0) {
-      return point;
-    }
-  }
-  return Point(width/2, 0);
-}
-
-// Highest line returns the height of the highest continous
-// white column
-Point highestLine(Mat& m) {
-  Point highest = Point(0, m.rows);
-
-  for (int x = 0; x < m.cols; x++) {
-    for (int y = m.rows-1; y >= 0; y--) {
-      uchar color = m.at<uchar>(Point(x, y));
-      if (color == 255) {
-        if (y < highest.y) {
-          highest = Point(x, y);
-        }
-      } else {
-        break;
-      }
-    }
-  }
-  return highest;
-}
-
-int whitePercent(Mat &m) {
-  int black = 0;
-  int white = 0;
-  for (auto it = m.begin<uchar>(); it != m.end<uchar>(); it++) {
-    if (*it == 0) {
-      black++;
-    } else {
-      white++;
-    }
-  }
-  return white*100/(black+white);
-}
 
 int main(int argc, char **argv)
 {

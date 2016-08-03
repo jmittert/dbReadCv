@@ -14,8 +14,8 @@ if(NOT LIBPQXX_FOUND)
   message(FATAL_ERROR " Please check your libqp installation.") 
 endif(NOT LIBPQXX_FOUND)
 
-add_executable( train src/main/nnw.cpp src/lib/lib.cpp)
-add_executable( control src/main/control.cpp src/lib/lib.cpp)
+add_executable( train src/main/nnw.cpp src/lib/lib.cpp src/lib/features.cpp)
+add_executable( control src/main/control.cpp src/lib/lib.cpp src/lib/features.cpp)
 
 include_directories(${PostgreSQL_INCLUDE_DIR} ${LIBPQXX_INCLUDE_DIRS} include)
 target_link_libraries( train ${OpenCV_LIBS} ${PostgreSQL_LIBRARIES} /usr/lib/libpqxx.so)
