@@ -104,7 +104,7 @@ int main(int argc, char **argv)
     cout << "gotcha!" << endl;
     namedWindow("Image" , cv::WINDOW_AUTOSIZE);
     do {
-      pqxx::result res = txn.exec("SELECT image FROM images ORDER BY id DESC LIMIT 1");
+      pqxx::result res = txn.exec("SELECT image FROM readImgs ORDER BY id DESC LIMIT 1");
       Mat img;
       Mat disp_img;
       strToMat(res[0][0].as<std::string>(), img);
