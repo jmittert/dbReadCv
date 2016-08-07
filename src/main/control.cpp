@@ -41,12 +41,10 @@ int main(int argc, char **argv)
   Ptr<ml::ANN_MLP> brain;
   // check if the data already exists
   ifstream f("ml.out");
-  if (f.good())
-  {
+  if (f.good()) {
     brain = Algorithm::load<ANN_MLP>("ml.out");
   }
-  else
-  {
+  else {
     cerr << "Program not trained yet..." << endl;
     exit(1);
   }
@@ -69,8 +67,7 @@ int main(int argc, char **argv)
 
     s = socket(servinfo->ai_family, servinfo->ai_socktype, servinfo->ai_protocol);
 
-    if (s == -1)
-    {
+    if (s == -1) {
       cerr << "socket error: " << errno << endl;
       exit(1);
     }
@@ -78,14 +75,12 @@ int main(int argc, char **argv)
 
     int yes = 1;
     setsockopt(s, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int));
-    if (bind(s, servinfo->ai_addr, servinfo->ai_addrlen) ==  -1)
-    {
+    if (bind(s, servinfo->ai_addr, servinfo->ai_addrlen) ==  -1) {
       cerr << "bind error: " << errno << endl;
       exit(1);
     }
 
-    if (listen(s, 5) == -1)
-    {
+    if (listen(s, 5) == -1) {
       cerr << "listen error: " << errno << endl;
       exit(1);
     }
@@ -104,7 +99,19 @@ int main(int argc, char **argv)
     cout << "gotcha!" << endl;
     namedWindow("Image" , cv::WINDOW_AUTOSIZE);
     do {
-      pqxx::result res = txn.exec("SELECT image FROM readImgs ORDER BY id DESC LIMIT 1");
+      pqxx::result res = txn.exec("SELECT "
+          "image, "
+          "s1.rpwm, s1.lpwm, "
+          "s2.rpwm, s2.lpwm, "
+          "s3.rpwm, s3.lpwm, "
+          "s4.rpwm, s4.lpwm, "
+          "s5.rpwm, s5.lpwm "
+        "FROM readImgs "
+          "INNER JOIN states s1 ON s1.id = images.state1 "
+          "INNER JOIN states s2 ON s2.id = images.state2 "
+          "INNER JOIN states s3 ON s3.id = images.state3 "
+          "INNER JOIN states s4 ON s4.id = images.state4 "
+        "ORDER BY id DESC LIMIT 1");
       Mat img;
       Mat disp_img;
       strToMat(res[0][0].as<std::string>(), img);
@@ -122,6 +129,9 @@ int main(int argc, char **argv)
       inputs.at<float>(0,4) = highest.x;
       inputs.at<float>(0,5) = highest.y;
       inputs.at<float>(0,6) = wperc;
+      for (int j = 3; j <= 10; ++j) {
+        inputs.at<float>(0, j+4) = res[0][j].as<float>();
+      }
 
       Mat out;
       brain->predict(inputs, out); 
