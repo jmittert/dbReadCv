@@ -2,7 +2,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 
-GamePad::GamePad(char* f) {
+GamePad::GamePad(std::string f) {
   A = B = X = Y = false;
   Back = Start = false;
   LBumper = RBumper = false;
@@ -10,7 +10,7 @@ GamePad::GamePad(char* f) {
   LStickX = LStickY = RStickX = RStickY = 0;
   LTrigger = RTrigger = -32768;
   DPadX = DPadY = 0;
-  fd = open(f, O_RDONLY);
+  fd = open(f.c_str(), O_RDONLY);
 }
 
 GamePad::~GamePad() {
@@ -48,22 +48,22 @@ void GamePad::Update() {
     }
   } else {
     switch (e.number) {
-    case 0:
+      case 0:
         LStickX = deadzone(e.value); break;
-    case 1:
+      case 1:
         LStickY = deadzone(e.value); break;
-    case 2:
+      case 2:
         LTrigger = deadzone(e.value); break;
-    case 3:
+      case 3:
         RStickY = deadzone(e.value); break;
-    case 4:
-      RStickX = deadzone(e.value); break;
-    case 5:
-      RTrigger = deadzone(e.value); break;
-    case 6:
-      DPadX = deadzone(e.value); break;
-    case 7:
-      DPadY = deadzone(e.value); break;
+      case 4:
+        RStickX = deadzone(e.value); break;
+      case 5:
+        RTrigger = deadzone(e.value); break;
+      case 6:
+        DPadX = deadzone(e.value); break;
+      case 7:
+        DPadY = deadzone(e.value); break;
     }
   }
 }

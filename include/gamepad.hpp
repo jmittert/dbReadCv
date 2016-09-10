@@ -1,6 +1,7 @@
 #pragma once
 #include <linux/joystick.h>
 #include <cstdint>
+#include <string>
 #include "car.hpp"
 class GamePad
 {
@@ -27,7 +28,7 @@ class GamePad
     int16_t DPadY;
     const uint8_t DEADZONE = 200;
   public:
-    GamePad(char* f);
+    GamePad(std::string f);
     ~GamePad();
     void Update();
     // Writes the Gamepad state to the given car state

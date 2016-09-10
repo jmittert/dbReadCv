@@ -2,6 +2,7 @@
 #include <cstdint>
 #include <wiringPi.h>
 #include <softPwm.h>
+#include <iostream>
 
 // The GPIO pins the motors are attached to
 #define PIN_A1 0
@@ -23,15 +24,20 @@ struct CarState {
     uint8_t RPWM;
 };
 
+std::ostream& operator<<(std::ostream& os, CarState& state);
+
 class Car
 {
   private:
     CarState state;
-  public:
-    Car();
 
     // Write writes the state to hardware
     void Write();
+  public:
+    Car();
+
+    // Sets the car state based on newState and writes it to hardware
+    void Update(CarState& newState);
 
     ~Car();
 };

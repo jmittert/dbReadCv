@@ -1,4 +1,18 @@
 #include "car.hpp"
+#include <cstring>
+
+std::ostream& operator<<(std::ostream& os, CarState& state) {
+  os << "CarState: {"
+    " A1: " << unsigned(state.A1) << 
+    " A2: " << unsigned(state.A2) << 
+    " B1: " << unsigned(state.B1) << 
+    " B2: " << unsigned(state.B2) << 
+    " LPWM: " << unsigned(state.LPWM) << 
+    " RPWM: " << unsigned(state.RPWM) << 
+    " }" << std::endl;
+  return os;
+}
+
 Car::Car() {
     wiringPiSetup();
     pinMode(PIN_A1, OUTPUT);
@@ -18,6 +32,11 @@ void Car::Write() {
   digitalWrite(PIN_B2, state.B2);
   softPwmWrite(PIN_LPWM, state.LPWM);
   softPwmWrite(PIN_RPWM, state.RPWM);
+}
+
+void Car::Update(CarState& newState) {
+  memcpy(&state, &newState, sizeof(struct CarState));
+  Write();
 }
 
 Car::~Car() {
