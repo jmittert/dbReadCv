@@ -6,12 +6,10 @@
 #include <netdb.h>
 #include <pqxx/pqxx>
 #include <unistd.h>
+#include <client.hpp>
 #include "car.hpp"
 int main(int argc, char **argv)
 {
-  struct addrinfo *servinfo;
-  int s;
-  int new_fd;
   using namespace std;
   bool hw = true;
   bool train = true;
@@ -52,50 +50,27 @@ int main(int argc, char **argv)
     }
   }
 
-  // Try to get a connection
-  int status;
-  struct addrinfo hints;
-  memset(&hints, 0, sizeof hints);
-
-  hints.ai_family = AF_UNSPEC;
-  hints.ai_socktype = SOCK_STREAM;
-  hints.ai_flags = AI_PASSIVE;
-
-  cout << "Connecting to " << serverAddr << endl;
-  if ((status = getaddrinfo(serverAddr.c_str(), "2718", &hints, &servinfo)) != 0) {
-    cerr << "gettaddrinfo error: " << status << endl;
-    exit(1);
+  Client client = Client(serverAddr, 2718);
+  if (client.Connect()) {
+    return 1;
   }
+  Car hwCar = Car(!hw);
 
-  s = socket(servinfo->ai_family, servinfo->ai_socktype, servinfo->ai_protocol);
-  if (s == -1) {
-    cerr << "socket error: " << errno << endl;
-    exit(1);
-  }
-
-  cout << "Socket: " << s << endl;
-  if (connect(s, servinfo->ai_addr, servinfo->ai_addrlen)){
-    cerr << "connect error: " << errno << endl;
-    exit(1);
-  }
-
-  Car hwCar = Car();
   while(1) {
       struct CarState state;
-      char pack[6];
-      recv(s, pack, 6, 0);
+      vector<unsigned char> pack = client.Recv();
+      if (pack.size() != 6) {
+        break;
+      }
       state.A1 = pack[0];
       state.A2 = pack[1];
       state.B1 = pack[2];
       state.B2 = pack[3];
       state.LPWM = pack[4];
       state.RPWM = pack[5];
-      char conf[1] = {1};
-      hwCar.Update(state);
-      send(s, conf, 1, 0);
-  }
 
-  // Close the listening port
-  close(s);
+      hwCar.Update(state);
+      client.Send({1});
+  }
 }
 

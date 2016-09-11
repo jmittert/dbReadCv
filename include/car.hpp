@@ -30,11 +30,16 @@ class Car
 {
   private:
     CarState state;
+    bool fake;
 
     // Write writes the state to hardware
     void Write();
   public:
     Car();
+    /**
+     * If true, start a fake car which doesn't interact with hardware
+     */
+    Car(bool fake);
 
     // Sets the car state based on newState and writes it to hardware
     void Update(CarState& newState);

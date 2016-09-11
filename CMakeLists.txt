@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 2.8)
 project( DBDisplay )
 
+set(CMAKE_BUILD_TYPE Debug)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 find_package( OpenCV REQUIRED )
 find_package( PostgreSQL REQUIRED )
@@ -17,8 +18,8 @@ endif(NOT LIBPQXX_FOUND)
 add_executable( train src/main/nnw.cpp src/lib/lib.cpp src/lib/features.cpp)
 add_executable( ncontrol src/main/nncontrol.cpp src/lib/lib.cpp src/lib/features.cpp)
 add_executable( watch src/main/watch.cpp src/lib/lib.cpp src/lib/features.cpp)
-add_executable( gcontrol src/main/gpcontrol.cpp src/lib/car.cpp src/lib/gamepad.cpp)
-add_executable( car src/main/carClient.cpp src/lib/car.cpp)
+add_executable( gcontrol src/main/gpcontrol.cpp src/lib/car.cpp src/lib/gamepad.cpp src/lib/server.cpp src/lib/communicator.cpp)
+add_executable( car src/main/carClient.cpp src/lib/car.cpp src/lib/client.cpp src/lib/communicator.cpp)
 
 include_directories(${PostgreSQL_INCLUDE_DIR} ${LIBPQXX_INCLUDE_DIRS} include)
 target_link_libraries( train ${OpenCV_LIBS} ${PostgreSQL_LIBRARIES} /usr/lib/libpqxx.so)
