@@ -21,10 +21,10 @@ int Server::Listen() {
     std::stringstream ss;
     ss << port;
     const char* port_str = ss.str().c_str();
-    int status;
-    if ((status = getaddrinfo(NULL, port_str, &hints, &servinfo)) != 0) {
-        std::cerr << "gettaddrinfo error: " << status << std::endl;
-        return errno;
+    int status = getaddrinfo(NULL, port_str, &hints, &servinfo);
+    if (status != 0) {
+        std::cerr << "gettaddrinfo error: " << gai_strerror(status)  << std::endl;
+        return status;
     }
 
     s = socket(servinfo->ai_family, servinfo->ai_socktype, servinfo->ai_protocol);

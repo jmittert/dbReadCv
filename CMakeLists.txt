@@ -29,4 +29,4 @@ target_link_libraries( gcontrol /usr/lib/libwiringPi.so)
 target_link_libraries( car /usr/lib/libwiringPi.so)
 LINK_DIRECTORIES(${LIBPQXX_LIBRARY_DIRS})
 
-set (CMAKE_CXX_FLAGS "-std=c++0x")
+set (CMAKE_CXX_FLAGS "-std=c++11")
