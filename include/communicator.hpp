@@ -12,7 +12,7 @@ class Communicator
 {
   protected:
     int fd; /** The file descriptor to communicate on*/
-    bool connected = false; /** True once the server has connected to a clinet*/
+    bool connected; /** True once the server has connected to a clinet*/
 
     /**
      * Connect to the socket

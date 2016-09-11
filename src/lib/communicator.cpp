@@ -2,7 +2,9 @@
 #include <unistd.h>
 #include <iostream>
 
-Communicator::Communicator(){}
+Communicator::Communicator(){
+    connected=false;
+}
 
 void Communicator::Send(std::vector<unsigned char> bytes) {
     if (!connected) {
