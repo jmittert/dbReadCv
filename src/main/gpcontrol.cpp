@@ -12,7 +12,7 @@ int main(int argc, char **argv)
 {
     using namespace std;
     // Load in the GamePad
-    GamePad gp = GamePad("/dev/js0");
+    GamePad gp = GamePad("/dev/input/js0");
     Server serv = Server(2718);
     if (serv.Listen()) {
         return 1;
@@ -21,7 +21,6 @@ int main(int argc, char **argv)
         gp.Update();
         struct CarState state;
         gp.SetCarState(state);
-        cout << state << endl;
         vector<unsigned char> pack = {
             state.A1, state.A2,
             state.B1, state.B2,

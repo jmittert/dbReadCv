@@ -83,6 +83,11 @@ void GamePad::SetCarState(CarState& state) {
     state.A2 = HIGH;
     state.B1 = LOW;
     state.B2 = HIGH;
+  } else {
+    state.A1 = LOW;
+    state.A2 = LOW;
+    state.B1 = LOW;
+    state.B2 = LOW;
   }
   float basePwm = 100;
   float leftMod = 1;
@@ -101,11 +106,11 @@ void GamePad::SetCarState(CarState& state) {
     }
   }
   if (RTrigger > -22767) {
-    int modifier = float(RTrigger + 32768)/ 65536;
-    basePwm = float(basePwm) * modifier;
+    float modifier = float(RTrigger + 32768)/ 65536;
+    basePwm = basePwm * modifier;
   } else if (LTrigger > -22767) {
-    int modifier = float(LTrigger + 32768)/ 65536;
-    basePwm = float(basePwm) * modifier;
+    float modifier = float(LTrigger + 32768)/ 65536;
+    basePwm = basePwm * modifier;
   } else {
     basePwm = 0;
   }
