@@ -15,9 +15,9 @@ int main(int argc, char **argv)
   bool train = true;
   // Parse the flags
   for (int i = 0; i < argc; ++i) {
-    if (strcmp(argv[i], "--hw=false")) {
+    if (!strcmp(argv[i], "--hw=false")) {
       hw = false;
-    } else if (strcmp(argv[i], "--train=false")) {
+    } else if (!strcmp(argv[i], "--train=false")) {
       train=false;
     }
   }
@@ -49,12 +49,12 @@ int main(int argc, char **argv)
       f >> dbUser;
     }
   }
+  Car hwCar = Car(!hw);
 
   Client client = Client(serverAddr, 2718);
   if (client.Connect()) {
     return 1;
   }
-  Car hwCar = Car(!hw);
 
   while(1) {
       struct CarState state;
