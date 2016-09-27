@@ -14,12 +14,15 @@ int main(int argc, char **argv)
   using namespace std;
   bool hw = true;
   bool train = true;
+  bool takePic = true;
   // Parse the flags
   for (int i = 0; i < argc; ++i) {
     if (!strcmp(argv[i], "--hw=false")) {
       hw = false;
     } else if (!strcmp(argv[i], "--train=false")) {
       train=false;
+    }  else if (!strcmp(argv[i], "--pic=false")) {
+      takePic=false;
     }
   }
 
@@ -104,9 +107,13 @@ int main(int argc, char **argv)
 
       if (train) {
         // Get the picture
-        // picClient.Send({1});
-        //vector<unsigned char> pic = picClient.Recv();
-        vector<unsigned char> pic = {' '};
+        vector<unsigned char> pic;
+        if (takePic) {
+          picClient.Send({1});
+          pic = picClient.Recv();
+        } else {
+          pic = {' '};
+        }
         stringstream ss;
         for (auto& c : pic) {
           ss << c;
