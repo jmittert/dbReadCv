@@ -26,8 +26,11 @@ int main(int argc, char **argv)
             state.B1, state.B2,
             state.LPWM, state.RPWM
         };
+        cout << "sending" << endl;
         serv.Send(pack);
+        cout << "sent" << endl;
         // Wait for a confirmation byte
         serv.Recv();
+        cout << "rep" << endl;
     } 
 }
