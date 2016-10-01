@@ -20,6 +20,17 @@ class Communicator
      * @return 0 on success, errno on failure
      */
     virtual int Initialize() = 0;
+
+    /**
+     * Recv data from an attached client
+     *
+     * PRE: Server must be connected
+     *
+     * @param the expected number of bytes to receive
+     * @return of received 
+     */
+    std::vector<unsigned char> Recv(uint64_t count);
+
   public:
     Communicator();
 

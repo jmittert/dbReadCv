@@ -9,6 +9,14 @@
 #include <client.hpp>
 #include "car.hpp"
 
+static std::pair<char,char> byteToAscii(unsigned char x) {
+    unsigned char front = x >> 4;
+    unsigned char back  = x & 0xf;
+    front += front >= 0 && front <= 9 ? '0' : 'A' - 10;
+    back += back >= 0 && back <= 9 ? '0' : 'A' - 10;
+    return std::make_pair<char,char>(front,back);
+}
+
 int main(int argc, char **argv)
 {
   using namespace std;
@@ -52,9 +60,15 @@ int main(int argc, char **argv)
       f >> dbName;
     } else if (tmp == "DbUser") {
       f >> dbUser;
+    } else {
+      // eat the remaining
+      f >> tmp;
     }
   }
-  pqxx::connection c("dbname=" + dbName + " user=" + dbUser);
+  pqxx::connection c(
+      "dbname=" + dbName + " "
+      "user=" + dbUser + " "
+      "host=" + dbAddr);
 
   // Track the current and list 4 state ids, default to 0
   int ids[5] = {1,1,1,1,1};
@@ -67,12 +81,15 @@ int main(int argc, char **argv)
   }
 
   // Connect to the controlling server
-  Client picClient = Client("localhost", 3141);
-#if 0
-  if (picClient.Connect()) {
-    return 1;
+  Client picClient = Client("127.0.0.1", 3141);
+  if (takePic) {
+    cout << "connecting to camera service" << endl;
+    if (picClient.Connect()) {
+      return 1;
+    }
+    cout << "connected to camera service" << endl;
   }
-#endif
+
   while(1) {
       pqxx::work txn(c);
       struct CarState state;
@@ -115,9 +132,14 @@ int main(int argc, char **argv)
           pic = {' '};
         }
         stringstream ss;
+        ss << "\\x";
+        cout << "\\x";
         for (auto& c : pic) {
-          ss << c;
+          std::pair<char,char> nibbles = byteToAscii(c);
+          cout << nibbles.first << nibbles.second;
+          ss << nibbles.first << nibbles.second;
         }
+        cout << endl;
 
         string picStr = ss.str();
 

@@ -34,7 +34,11 @@ int Client::Connect() {
         return errno;
     }
 
-    while (connect(fd, servinfo->ai_addr, servinfo->ai_addrlen)) {
+    std::cerr << "Connecting..." << std::endl;
+    int i = 0;
+    while ((i = connect(fd, servinfo->ai_addr, servinfo->ai_addrlen))) {
+        int err = errno;
+        std::cerr << "Ret: " << i << " Errno: " << err << std::endl;
         sleep(1);
     }
 

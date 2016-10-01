@@ -20,6 +20,7 @@ static char hexToByte(char x, char y) {
   return (asciiToByte(x) << 4) | asciiToByte(y);
 }
 
+
 // Reads the data into the given Mat
 void strToMat(std::string pic, cv::Mat& m) {
     std::ofstream f;
