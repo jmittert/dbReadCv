@@ -93,6 +93,7 @@ int main(int argc, char **argv)
   while(1) {
       pqxx::work txn(c);
       struct CarState state;
+      cout << "Getting state" << endl;
       vector<unsigned char> pack = client.Recv();
       if (pack.size() != 6) {
         break;
@@ -105,6 +106,7 @@ int main(int argc, char **argv)
       state.RPWM = pack[5];
 
       if (train) {
+        cout << "Inserting state" << endl;
         stringstream insertState;
         insertState << "INSERT INTO states (a1, a2, b1, b2, lpwm, rpwm)"
           << " VALUES("
@@ -124,6 +126,7 @@ int main(int argc, char **argv)
 
       if (train) {
         // Get the picture
+        cout << "Getting pic" << endl;
         vector<unsigned char> pic;
         if (takePic) {
           picClient.Send({1});
@@ -133,17 +136,15 @@ int main(int argc, char **argv)
         }
         stringstream ss;
         ss << "\\x";
-        cout << "\\x";
         for (auto& c : pic) {
           std::pair<char,char> nibbles = byteToAscii(c);
-          cout << nibbles.first << nibbles.second;
           ss << nibbles.first << nibbles.second;
         }
-        cout << endl;
 
         string picStr = ss.str();
 
         cout << "ptr: " << currIdPtr << endl;
+        cout << "Inserting pic" << endl;
         std::string insertImg =
           "INSERT INTO images (image, state1, state2, state3, state4, state5)"
           " VALUES(" +
@@ -153,10 +154,10 @@ int main(int argc, char **argv)
           txn.quote(ids[(currIdPtr + 2) % 5]) + ", " +
           txn.quote(ids[(currIdPtr + 3) % 5]) + ", " +
           txn.quote(ids[(currIdPtr + 4) % 5]) + ");";
-        cout << insertImg << endl;;
         txn.exec(insertImg);
         currIdPtr = (currIdPtr + 1) % 5;
       }
+      cout << "Done" << endl;
       client.Send({1});
       txn.commit();
   }
