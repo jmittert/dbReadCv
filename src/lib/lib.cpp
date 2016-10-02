@@ -1,6 +1,3 @@
-#include <string>
-#include <sstream>
-#include <fstream>
 #include "lib.hpp"
 
 static int asciiToByte(char x) {
@@ -16,31 +13,14 @@ static int asciiToByte(char x) {
   throw ss.str();
 }
 
-static char hexToByte(char x, char y) {
+char hexToByte(char x, char y) {
   return (asciiToByte(x) << 4) | asciiToByte(y);
 }
 
-
-// Reads the data into the given Mat
-void strToMat(std::string pic, cv::Mat& m) {
-    std::ofstream f;
-    f.open("/tmp/db.jpg");
-
-    char prev;
-    bool haveTwo = false;
-    for (auto it=pic.begin(); it !=pic.end(); ++it) {
-      if (*it == '\\' || *it == 'x') {
-        continue;
-      } else {
-        if (haveTwo == false) {
-          prev = *it;
-          haveTwo = true;
-          continue;
-        }
-        haveTwo = false;
-        f << hexToByte(prev, *it);
-      }
-    }
-    f.close();
-    m = cv::imread( "/tmp/db.jpg", 1 );
+std::pair<char,char> byteToHex(unsigned char x) {
+    unsigned char front = x >> 4;
+    unsigned char back  = x & 0xf;
+    front += front >= 0 && front <= 9 ? '0' : 'A' - 10;
+    back += back >= 0 && back <= 9 ? '0' : 'A' - 10;
+    return std::make_pair<char,char>(front,back);
 }

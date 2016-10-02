@@ -12,6 +12,7 @@
 #include <unistd.h>
 #include <cstdint>
 #include "lib.hpp"
+#include "cvlib.hpp"
 #include "features.hpp"
 
 

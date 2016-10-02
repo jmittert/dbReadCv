@@ -8,14 +8,7 @@
 #include <unistd.h>
 #include <client.hpp>
 #include "car.hpp"
-
-static std::pair<char,char> byteToAscii(unsigned char x) {
-    unsigned char front = x >> 4;
-    unsigned char back  = x & 0xf;
-    front += front >= 0 && front <= 9 ? '0' : 'A' - 10;
-    back += back >= 0 && back <= 9 ? '0' : 'A' - 10;
-    return std::make_pair<char,char>(front,back);
-}
+#include "lib.hpp"
 
 int main(int argc, char **argv)
 {
@@ -137,7 +130,7 @@ int main(int argc, char **argv)
         stringstream ss;
         ss << "\\x";
         for (auto& c : pic) {
-          std::pair<char,char> nibbles = byteToAscii(c);
+          std::pair<char,char> nibbles = byteToHex(c);
           ss << nibbles.first << nibbles.second;
         }
 

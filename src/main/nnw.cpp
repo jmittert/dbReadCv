@@ -8,6 +8,7 @@
 #include <opencv2/core.hpp>
 #include <fstream>
 #include "lib.hpp"
+#include "cvlib.hpp"
 #include "features.hpp"
 
 
