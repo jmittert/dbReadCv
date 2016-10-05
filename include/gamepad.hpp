@@ -2,6 +2,8 @@
 #include <linux/joystick.h>
 #include <cstdint>
 #include <string>
+#include <mutex>
+#include <atomic>
 #include "car.hpp"
 class GamePad
 {
@@ -27,12 +29,15 @@ class GamePad
     int16_t DPadX;
     int16_t DPadY;
     const uint8_t DEADZONE = 200;
+    std::atomic<bool> updating;
+    void Update();
+    std::mutex lock;
+    int deadzone(int x);
   public:
     GamePad(std::string f);
+    GamePad(const GamePad& gp) = delete;
     ~GamePad();
-    void Update();
+    void StartUpdating();
     // Writes the Gamepad state to the given car state
     void SetCarState(CarState& state);
-  private:
-    int deadzone(int x);
 };

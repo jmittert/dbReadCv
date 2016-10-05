@@ -1,6 +1,7 @@
 #include "gamepad.hpp"
 #include <fcntl.h>
 #include <unistd.h>
+#include <thread>
 
 GamePad::GamePad(std::string f) {
   A = B = X = Y = false;
@@ -15,57 +16,65 @@ GamePad::GamePad(std::string f) {
 
 GamePad::~GamePad() {
   close(fd);
+  updating = false;
+}
+
+void GamePad::StartUpdating() {
+  updating = true;
+  std::thread t([this](){while(updating) {this->Update();}});
+  t.detach();
 }
 
 void GamePad::Update() {
-  struct js_event e;
-  read(fd, &e, sizeof(struct js_event));
+    struct js_event e;
+    read(fd, &e, sizeof(struct js_event));
 
-  if (e.type == 1) {
-    switch (e.number) {
-      case 0:
-        A = e.value ; break;
-      case 1:
-        B = e.value ; break;
-      case 2:
-        X = e.value ; break;
-      case 3:
-        Y = e.value; break;
-      case 4:
-        LBumper = e.value; break;
-      case 5:
-        RBumper = e.value; break;
-      case 6:
-        Back = e.value; break;
-      case 7:
-        Start = e.value; break;
-      case 8:
-        Guide = e.value; break;
-      case 9:
-        LStickPress = e.value; break;
-      case 10:
-        RStickPress = e.value; break; 
+    std::lock_guard<std::mutex> guard(lock);
+    if (e.type == 1) {
+      switch (e.number) {
+        case 0:
+          A = e.value ; break;
+        case 1:
+          B = e.value ; break;
+        case 2:
+          X = e.value ; break;
+        case 3:
+          Y = e.value; break;
+        case 4:
+          LBumper = e.value; break;
+        case 5:
+          RBumper = e.value; break;
+        case 6:
+          Back = e.value; break;
+        case 7:
+          Start = e.value; break;
+        case 8:
+          Guide = e.value; break;
+        case 9:
+          LStickPress = e.value; break;
+        case 10:
+          RStickPress = e.value; break; 
+      }
+    } else {
+      switch (e.number) {
+        case 0:
+          LStickX = deadzone(e.value); break;
+        case 1:
+          LStickY = deadzone(e.value); break;
+        case 2:
+          LTrigger = deadzone(e.value); break;
+        case 3:
+          RStickY = deadzone(e.value); break;
+        case 4:
+          RStickX = deadzone(e.value); break;
+        case 5:
+          RTrigger = deadzone(e.value); break;
+        case 6:
+          DPadX = deadzone(e.value); break;
+        case 7:
+          DPadY = deadzone(e.value); break;
+      }
     }
-  } else {
-    switch (e.number) {
-      case 0:
-        LStickX = deadzone(e.value); break;
-      case 1:
-        LStickY = deadzone(e.value); break;
-      case 2:
-        LTrigger = deadzone(e.value); break;
-      case 3:
-        RStickY = deadzone(e.value); break;
-      case 4:
-        RStickX = deadzone(e.value); break;
-      case 5:
-        RTrigger = deadzone(e.value); break;
-      case 6:
-        DPadX = deadzone(e.value); break;
-      case 7:
-        DPadY = deadzone(e.value); break;
-    }
-  }
 }
 
 int GamePad::deadzone(int x) {
@@ -73,6 +82,7 @@ int GamePad::deadzone(int x) {
 }
 
 void GamePad::SetCarState(CarState& state) {
+  std::lock_guard<std::mutex> guard(lock);
   if (RTrigger > -22767) {
     state.A1 = HIGH;
     state.A2 = LOW;

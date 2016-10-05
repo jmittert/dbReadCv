@@ -12,13 +12,14 @@ int main(int argc, char **argv)
 {
     using namespace std;
     // Load in the GamePad
-    GamePad gp = GamePad("/dev/input/js0");
+    GamePad gp("/dev/input/js0");
+    gp.StartUpdating();
     Server serv = Server(2718);
     if (serv.Listen()) {
         return 1;
     }
     while (1) {
-        gp.Update();
+        serv.Recv();
         struct CarState state;
         gp.SetCarState(state);
         vector<unsigned char> pack = {
@@ -26,11 +27,7 @@ int main(int argc, char **argv)
             state.B1, state.B2,
             state.LPWM, state.RPWM
         };
-        cout << "sending" << endl;
         serv.Send(pack);
-        cout << "sent" << endl;
         // Wait for a confirmation byte
-        serv.Recv();
-        cout << "rep" << endl;
     } 
 }

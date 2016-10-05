@@ -11,16 +11,12 @@ void Communicator::Send(std::vector<unsigned char> bytes) {
         return;
     }
     uint64_t remaining = bytes.size();
-    std::cout << "Sending " << remaining << std::endl;
     // Send eight bytes indicating the size, then the actual data
     // Start from the most significant and work down
     unsigned char size_bytes[8] = {0};
-    std::cout << "Size arr: [";
     for (int i = 7; i >= 0; i--) {
         size_bytes[7-i] = (remaining & (0xff << (i*8))) >> (i*8);
-        std::cout << ((remaining & (0xff << (i*8))) >> (i*8)) << ", ";
     }
-    std:: cout << "]" << std::endl;
     send(fd, &size_bytes, 8, 0);
     while (remaining) {
         remaining -= send(fd, &bytes[bytes.size() - remaining], remaining, 0);
@@ -38,7 +34,6 @@ std::vector<unsigned char> Communicator::Recv() {
     for (int i = 0; i < 8; i++) {
         size |= (size_bytes[i] << ((7-i)*8));
     }
-    std::cout << "Recv size: " << size << std::endl;
     return Recv(size);
 }
 

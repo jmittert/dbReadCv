@@ -29,7 +29,7 @@ include_directories(${PostgreSQL_INCLUDE_DIR} ${LIBPQXX_INCLUDE_DIRS} include)
 target_link_libraries( train ${OpenCV_LIBS} ${PostgreSQL_LIBRARIES} /usr/lib/libpqxx.so)
 target_link_libraries( ncontrol ${OpenCV_LIBS} ${PostgreSQL_LIBRARIES} /usr/lib/libpqxx.so)
 target_link_libraries( watch ${OpenCV_LIBS} ${PostgreSQL_LIBRARIES} /usr/lib/libpqxx.so)
-target_link_libraries( gcontrol /usr/lib/libwiringPi.so)
+target_link_libraries( gcontrol /usr/lib/libwiringPi.so pthread)
 target_link_libraries( car /usr/lib/libwiringPi.so ${PostgreSQL_LIBRARIES} /usr/lib/libpqxx.so )
 
 target_link_libraries( testExe UnitTest++)

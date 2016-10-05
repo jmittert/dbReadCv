@@ -63,7 +63,7 @@ int main(int argc, char **argv)
       "user=" + dbUser + " "
       "host=" + dbAddr);
 
-  // Track the current and list 4 state ids, default to 0
+  // Track the current and last 4 state ids, default to 0
   int ids[5] = {1,1,1,1,1};
   int currIdPtr = 0;
 
@@ -86,7 +86,7 @@ int main(int argc, char **argv)
   while(1) {
       pqxx::work txn(c);
       struct CarState state;
-      cout << "Getting state" << endl;
+      client.Send({1});
       vector<unsigned char> pack = client.Recv();
       if (pack.size() != 6) {
         break;
@@ -150,8 +150,6 @@ int main(int argc, char **argv)
         txn.exec(insertImg);
         currIdPtr = (currIdPtr + 1) % 5;
       }
-      cout << "Done" << endl;
-      client.Send({1});
       txn.commit();
   }
 }
