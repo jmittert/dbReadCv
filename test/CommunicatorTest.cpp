@@ -18,6 +18,7 @@ SUITE(Communicator)
             CHECK(exp == bytes);
         } else {
             Client c("127.0.0.1", 9001); 
+            usleep(1000); // Let the server set up
             c.Connect();
             auto bytes = c.Recv();
             std::vector<unsigned char> exp = {1,2,3,4,5};
