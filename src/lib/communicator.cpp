@@ -52,6 +52,8 @@ std::vector<unsigned char> Communicator::Recv(uint64_t count) {
 }
 
 Communicator::~Communicator() {
+  if (connected) {
     shutdown(fd, 2);
     close(fd);
+  }
 }

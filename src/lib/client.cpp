@@ -9,6 +9,8 @@
 
 #define MAXBUFFLEN 100
 Client::Client(std::string addr, int p) : addr(addr), port(p){}
+Client::Client(Client& c) : addr(c.addr), port(c.port){}
+Client::Client(){fd = 0; servinfo = nullptr;};
 
 int Client::Connect() {
     if (connected) {
@@ -51,7 +53,9 @@ int Client::Initialize() {
 }
 
 Client::~Client() {
-  freeaddrinfo(servinfo);
-  shutdown(fd, 2);
-  close(fd);
+    if (connected) {
+        freeaddrinfo(servinfo);
+        shutdown(fd, 2);
+        close(fd);
+    }
 }

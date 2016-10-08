@@ -30,7 +30,7 @@ target_link_libraries( train ${OpenCV_LIBS} ${PostgreSQL_LIBRARIES} /usr/lib/lib
 target_link_libraries( ncontrol ${OpenCV_LIBS} ${PostgreSQL_LIBRARIES} /usr/lib/libpqxx.so)
 target_link_libraries( watch ${OpenCV_LIBS} ${PostgreSQL_LIBRARIES} /usr/lib/libpqxx.so)
 target_link_libraries( gcontrol /usr/lib/libwiringPi.so pthread)
-target_link_libraries( car /usr/lib/libwiringPi.so ${PostgreSQL_LIBRARIES} /usr/lib/libpqxx.so )
+target_link_libraries( car /usr/lib/libwiringPi.so ${PostgreSQL_LIBRARIES} /usr/lib/libpqxx.so pthread)
 
 target_link_libraries( testExe UnitTest++)
 add_test( testAll ./testExe )

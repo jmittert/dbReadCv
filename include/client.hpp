@@ -14,11 +14,13 @@ class Client: public Communicator
         std::string addr; /** The address to connect to */
         struct addrinfo *servinfo;
         struct addrinfo hints;
-        const int port; /** The port the client will run on*/
+        int port; /** The port the client will run on*/
     protected:
         int Initialize();
     public:
         Client(std::string, int port);
+        Client(Client&);
+        Client();
 
         /**
          * Initializes the client on the provided port
