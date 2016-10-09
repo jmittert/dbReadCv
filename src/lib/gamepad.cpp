@@ -81,6 +81,22 @@ int GamePad::deadzone(int x) {
   return (x > DEADZONE || x < -1*DEADZONE) ? x : 0;
 }
 
+int calcPwm(int basePwm, int stick) {
+  if (stick <= 1000) {
+    return basePwm;
+  }
+  /*
+   * We use a polynomial rather than a linear function
+   * to soften the effect of lower stick values
+   * let c = (2^15) - 1000
+   * f(x) = ((-basePwm)/c^2)x^2 + basePwm
+   */
+  double c = 32768 - 1000;
+  int pwm = (-1*basePwm)/(c*c) * (long(stick)*long(stick)) + basePwm;
+  std::cout << pwm << std::endl;
+  return pwm < 0 ? 0 : pwm;
+}
+
 void GamePad::SetCarState(CarState& state) {
   std::lock_guard<std::mutex> guard(lock);
   if (RTrigger > -22767) {
@@ -100,20 +116,12 @@ void GamePad::SetCarState(CarState& state) {
     state.B2 = LOW;
   }
   float basePwm = 100;
-  float leftMod = 1;
-  float rightMod = 1;
+  int leftMod = 0;
+  int rightMod = 0;
   if (LStickX > 1000) {
-    // <1000 -> Go right -> slow down right wheel
-    leftMod -= float(LStickX)/32768;
-    if (leftMod < 0) {
-      leftMod = 0;
-    }
+    leftMod = LStickX;
   } else if (LStickX < -1000) {
-    // >1000 -> Go left -> slow down left wheel
-    rightMod -= float(LStickX)/-32768;
-    if (rightMod < 0) {
-      rightMod = 0;
-    }
+    rightMod = -1* LStickX;
   }
   if (RTrigger > -22767) {
     float modifier = float(RTrigger + 32768)/ 65536;
@@ -124,6 +132,6 @@ void GamePad::SetCarState(CarState& state) {
   } else {
     basePwm = 0;
   }
-  state.RPWM = rightMod * basePwm;
-  state.LPWM = leftMod * basePwm;
+  state.RPWM = calcPwm(basePwm, rightMod);
+  state.LPWM = calcPwm(basePwm, leftMod);
 }
