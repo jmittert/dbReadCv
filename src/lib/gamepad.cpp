@@ -94,7 +94,6 @@ int calcPwm(int basePwm, int stick) {
    */
   double c = 32768 - 1000;
   int pwm = (-1*basePwm)/(c*c) * (long(stick)*long(stick)) + basePwm;
-  std::cout << pwm << std::endl;
   return pwm < 0 ? 0 : pwm;
 }
 
