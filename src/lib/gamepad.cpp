@@ -85,6 +85,7 @@ int calcPwm(int basePwm, int stick) {
   if (stick <= 1000) {
     return basePwm;
   }
+  stick = stick*2/3;
   /*
    * We use a polynomial rather than a linear function
    * to soften the effect of lower stick values
