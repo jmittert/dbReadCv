@@ -39,14 +39,18 @@ int main(int argc, char **argv)
   bool hw = true;
   bool train = true;
   bool takePic = true;
+  bool nn = false;
   // Parse the flags
-  for (int i = 0; i < argc; ++i) {
+  for (int i = 0; i < argc; ++i)
+  {
     if (!strcmp(argv[i], "--hw=false")) {
       hw = false;
     } else if (!strcmp(argv[i], "--train=false")) {
-      train=false;
+      train = false;
     }  else if (!strcmp(argv[i], "--pic=false")) {
-      takePic=false;
+      takePic = false;
+    }  else if (!strcmp(argv[i], "--nn=true")) {
+      nn = true;
     }
   }
 
@@ -113,7 +117,7 @@ int main(int argc, char **argv)
   t.detach();
 
   while(1) {
-    if (train) {
+    if (train || nn) {
       // Get the picture from the cam server
       vector<unsigned char> pic;
       if (takePic) {
@@ -150,8 +154,16 @@ int main(int argc, char **argv)
       const int id = txn.exec(insertState.str())[0][0].as<int>(0);
       ids[currIdPtr] = id;
 
+      std::string nnStatement =
+        "INSERT INTO readImg (image, state1, state2, state3, state4)"
+        " VALUES(" +
+        txn.quote(picStr) + ", " + 
+        txn.quote(ids[currIdPtr]) + ", " + 
+        txn.quote(ids[(currIdPtr + 1) % 5]) + ", " +
+        txn.quote(ids[(currIdPtr + 2) % 5]) + ", " +
+        txn.quote(ids[(currIdPtr + 3) % 5]) + ");";
 
-      std::string insertImg =
+      std::string trainStatement =
         "INSERT INTO images (image, state1, state2, state3, state4, state5)"
         " VALUES(" +
         txn.quote(picStr) + ", " + 
@@ -160,7 +172,7 @@ int main(int argc, char **argv)
         txn.quote(ids[(currIdPtr + 2) % 5]) + ", " +
         txn.quote(ids[(currIdPtr + 3) % 5]) + ", " +
         txn.quote(ids[(currIdPtr + 4) % 5]) + ");";
-      txn.exec(insertImg);
+      txn.exec(nn ? nnStatement : trainStatement);
       currIdPtr = (currIdPtr + 1) % 5;
       txn.commit();
     }

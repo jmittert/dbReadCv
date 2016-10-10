@@ -19,7 +19,7 @@ if(NOT LIBPQXX_FOUND)
 endif(NOT LIBPQXX_FOUND)
 
 add_executable( train src/main/nnw.cpp src/lib/lib.cpp src/lib/features.cpp src/lib/cvlib.cpp)
-add_executable( ncontrol src/main/nncontrol.cpp src/lib/lib.cpp src/lib/features.cpp src/lib/cvlib.cpp)
+add_executable( ncontrol src/main/nncontrol.cpp src/lib/lib.cpp src/lib/features.cpp src/lib/cvlib.cpp src/lib/server.cpp src/lib/communicator.cpp)
 add_executable( watch src/main/watch.cpp src/lib/lib.cpp src/lib/features.cpp src/lib/cvlib.cpp)
 add_executable( gcontrol src/main/gpcontrol.cpp src/lib/car.cpp src/lib/gamepad.cpp src/lib/server.cpp src/lib/communicator.cpp)
 add_executable( car src/main/carClient.cpp src/lib/car.cpp src/lib/client.cpp src/lib/communicator.cpp src/lib/lib.cpp)
