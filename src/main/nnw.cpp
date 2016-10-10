@@ -16,7 +16,7 @@ using namespace cv;
 using namespace cv::ml;
 using namespace std;
 
-const int NUM_INPUTS = 7;
+const int NUM_INPUTS = 15;
 const int NUM_OUTPUTS = 2;
 const string statement=
       "SELECT " 
@@ -100,11 +100,11 @@ int main(int argc, char **argv)
   }
 
   // Make some predictions
-	pqxx::result res = txn.exec(statement);
+  pqxx::result res = txn.exec(statement);
   Mat inputs = Mat(NUM_IMAGES, NUM_INPUTS, CV_32F);
   for (int i = 0; i < NUM_IMAGES; ++i)
   {
-			Mat img;
+      Mat img;
       strToMat(res[i][0].as<std::string>(), img);
       cvtColor(img, img, CV_BGR2GRAY);
       threshold(img, img, 128, 255, 0);
@@ -129,7 +129,7 @@ int main(int argc, char **argv)
   for (int i = 0; i < NUM_IMAGES; ++i) {
     cout << "Exp: [" << res[i][1] << ", " << res[i][2] << "]" << endl;
 
-		Mat outData = out.row(i);
+    Mat outData = out.row(i);
     cout << "Actual: " << outData << endl;
 
     Mat orig_img, img, disp_img;
