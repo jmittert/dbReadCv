@@ -126,13 +126,12 @@ int main(int argc, char **argv)
       } else {
         pic = {' '};
       }
-      stringstream ss;
-      ss << "\\x";
+      string picStr = "\\x";
       for (auto& c : pic) {
         std::pair<char,char> nibbles = byteToHex(c);
-        ss << nibbles.first << nibbles.second;
+        picStr += nibbles.first;
+        picStr += nibbles.second;
       }
-      string picStr = ss.str();
 
       // Get the current state
       std::unique_lock<std::mutex> lk(state_mutex);
