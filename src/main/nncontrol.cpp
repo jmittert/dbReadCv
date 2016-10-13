@@ -59,6 +59,7 @@ int main(int argc, char **argv)
   namedWindow("Image" , cv::WINDOW_AUTOSIZE);
   while (1)
   {
+      serv.Recv();
       Mat img;
       Mat disp_img;
       pqxx::result res = txn.exec(STATE_QUERY);
@@ -81,8 +82,8 @@ int main(int argc, char **argv)
       inputs.at<float>(0,4) = highest.x;
       inputs.at<float>(0,5) = highest.y;
       inputs.at<float>(0,6) = wperc;
-      for (int j = 3; j <= 10; ++j) {
-        inputs.at<float>(0, j+4) = res[0][j].as<float>();
+      for (int j = 1; j <= 8; ++j) {
+        inputs.at<float>(0, j+6) = res[0][j].as<float>();
       }
 
       // Predict!
@@ -90,6 +91,11 @@ int main(int argc, char **argv)
       brain->predict(inputs, out); 
       uint8_t lpwm = out.at<uint8_t>(0,0);
       uint8_t rpwm = out.at<uint8_t>(0,1);
+      // Trim the values if they are not in range
+      lpwm = lpwm < 0 ? 0 : lpwm;
+      rpwm = rpwm < 0 ? 0 : rpwm;
+      lpwm = lpwm > 100 ? 100 : lpwm;
+      rpwm = rpwm > 100 ? 100 : rpwm;
       vector<uint8_t> pack = {1, 0, 1, 0, lpwm, rpwm};
       serv.Send(pack);
 
